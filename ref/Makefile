@@ -1,7 +1,7 @@
 CC = nvcc
-CFLAGS += -x cu -rdc=true -gencode arch=compute_75,code=sm_75 \
+CFLAGS += -x cu -rdc=true -gencode arch=compute_70,code=sm_70 \
   --compiler-options "-Wall -Wextra \
-  -Wshadow -Wpointer-arith -O3 -fomit-frame-pointer -z noexecstack" -I/opt/cuda/include
+  -Wshadow -Wpointer-arith -O3 -fomit-frame-pointer -z noexecstack"
 NISTFLAGS += --compiler-options "-Wno-unused-result -O3 -fomit-frame-pointer"
 RM = /bin/rm
 
