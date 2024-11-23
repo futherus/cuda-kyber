@@ -1,12 +1,27 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
+#include <stdio.h>
 #include "params.h"
 #include "kem.h"
 #include "indcpa.h"
 #include "verify.h"
 #include "symmetric.h"
 #include "randombytes.h"
+
+#include <cuda.h>
+
+#define GPU_ASSERT(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess)
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
 /*************************************************
 * Name:        crypto_kem_keypair_derand
 *
@@ -22,16 +37,16 @@
 **
 * Returns 0 (success)
 **************************************************/
-int crypto_kem_keypair_derand(uint8_t *pk,
-                              uint8_t *sk,
-                              const uint8_t *coins)
+__global__ void
+crypto_kem_keypair_derand(uint8_t *pk,
+                          uint8_t *sk,
+                          const uint8_t *coins)
 {
   indcpa_keypair_derand(pk, sk, coins);
   memcpy(sk+KYBER_INDCPA_SECRETKEYBYTES, pk, KYBER_PUBLICKEYBYTES);
   hash_h(sk+KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
   /* Value z for pseudo-random output on reject */
   memcpy(sk+KYBER_SECRETKEYBYTES-KYBER_SYMBYTES, coins+KYBER_SYMBYTES, KYBER_SYMBYTES);
-  return 0;
 }
 
 /*************************************************
@@ -50,12 +65,40 @@ int crypto_kem_keypair_derand(uint8_t *pk,
 int crypto_kem_keypair(uint8_t *pk,
                        uint8_t *sk)
 {
-  uint8_t coins[2*KYBER_SYMBYTES];
-  randombytes(coins, 2*KYBER_SYMBYTES);
-  crypto_kem_keypair_derand(pk, sk, coins);
+  uint8_t coins[2*KYBER_SYMBYTES] = {
+    0xcb, 0x12, 0x61, 0xa8, 0xcf, 0x85, 0xa4, 0x8b, 0x5d, 0x37, 0xc1, 0x00, 0xb6, 0xb0, 0x2c, 0xfb,
+    0x1b, 0x84, 0x78, 0xc6, 0x2f, 0xe1, 0xc7, 0xd0, 0xe2, 0xcc, 0x0b, 0x48, 0xe7, 0xb7, 0xae, 0xfd,
+    0x7f, 0xe1, 0xa8, 0x95, 0xdb, 0xd9, 0x28, 0x88, 0x12, 0xf2, 0x68, 0xc0, 0x84, 0x8e, 0xe0, 0xa6,
+    0x1f, 0xe5, 0xd3, 0x21, 0xbb, 0xcf, 0x6d, 0x3c, 0x98, 0xb5, 0x35, 0xc4, 0x74, 0xae, 0x1a, 0xb0,
+  };
+  // randombytes(coins, 2*KYBER_SYMBYTES);
+
+  uint8_t *d_pk = nullptr;
+  uint8_t *d_sk = nullptr;
+  uint8_t *d_coins = nullptr;
+  cudaMalloc( &d_pk, CRYPTO_PUBLICKEYBYTES);
+  cudaMalloc( &d_sk, CRYPTO_SECRETKEYBYTES);
+  cudaMalloc( &d_coins, 2*KYBER_SYMBYTES);
+  assert( d_pk && d_sk && d_coins);
+
+  GPU_ASSERT( cudaMemcpy( d_coins, coins, 2*KYBER_SYMBYTES, cudaMemcpyHostToDevice) );
+
+  #if   (KYBER_K == 2)
+    pqcrystals_kyber512_ref_keypair_derand<<<1, 1>>>(d_pk, d_sk, d_coins);
+  #elif (KYBER_K == 3)
+    pqcrystals_kyber768_ref_keypair_derand<<<1, 1>>>(d_pk, d_sk, d_coins);
+  #elif (KYBER_K == 4)
+    pqcrystals_kyber1024_ref_keypair_derand<<<1, 1>>>(d_pk, d_sk, d_coins);
+  #endif
+
+  GPU_ASSERT( cudaGetLastError() );
+
+  GPU_ASSERT( cudaMemcpy( pk, d_pk, CRYPTO_PUBLICKEYBYTES, cudaMemcpyDeviceToHost) );
+  GPU_ASSERT( cudaMemcpy( sk, d_sk, CRYPTO_SECRETKEYBYTES, cudaMemcpyDeviceToHost) );
   return 0;
 }
 
+#if 0
 /*************************************************
 * Name:        crypto_kem_enc_derand
 *
@@ -167,3 +210,6 @@ int crypto_kem_dec(uint8_t *ss,
 
   return 0;
 }
+
+#endif
+

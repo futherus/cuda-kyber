@@ -1,7 +1,8 @@
-CC ?= /usr/bin/cc
-CFLAGS += -Wall -Wextra -Wpedantic -Wmissing-prototypes -Wredundant-decls \
-  -Wshadow -Wpointer-arith -O3 -fomit-frame-pointer -z noexecstack
-NISTFLAGS += -Wno-unused-result -O3 -fomit-frame-pointer
+CC = nvcc
+CFLAGS += -x cu -rdc=true -gencode arch=compute_75,code=sm_75 \
+  --compiler-options "-Wall -Wextra \
+  -Wshadow -Wpointer-arith -O3 -fomit-frame-pointer -z noexecstack" -I/opt/cuda/include
+NISTFLAGS += --compiler-options "-Wno-unused-result -O3 -fomit-frame-pointer"
 RM = /bin/rm
 
 SOURCES = kem.c indcpa.c polyvec.c poly.c ntt.c cbd.c reduce.c verify.c

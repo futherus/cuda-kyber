@@ -121,7 +121,8 @@ void poly_decompress(poly *r, const uint8_t a[KYBER_POLYCOMPRESSEDBYTES])
 *                            (needs space for KYBER_POLYBYTES bytes)
 *              - const poly *a: pointer to input polynomial
 **************************************************/
-void poly_tobytes(uint8_t r[KYBER_POLYBYTES], const poly *a)
+__host__ __device__ void
+poly_tobytes(uint8_t r[KYBER_POLYBYTES], const poly *a)
 {
   unsigned int i;
   uint16_t t0, t1;
@@ -222,7 +223,8 @@ void poly_tomsg(uint8_t msg[KYBER_INDCPA_MSGBYTES], const poly *a)
 *                                     (of length KYBER_SYMBYTES bytes)
 *              - uint8_t nonce: one-byte input nonce
 **************************************************/
-void poly_getnoise_eta1(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t nonce)
+__host__ __device__ void
+poly_getnoise_eta1(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t nonce)
 {
   uint8_t buf[KYBER_ETA1*KYBER_N/4];
   prf(buf, sizeof(buf), seed, nonce);
@@ -258,7 +260,8 @@ void poly_getnoise_eta2(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t non
 *
 * Arguments:   - uint16_t *r: pointer to in/output polynomial
 **************************************************/
-void poly_ntt(poly *r)
+__host__ __device__ void
+poly_ntt(poly *r)
 {
   ntt(r->coeffs);
   poly_reduce(r);
@@ -287,8 +290,30 @@ void poly_invntt_tomont(poly *r)
 *              - const poly *a: pointer to first input polynomial
 *              - const poly *b: pointer to second input polynomial
 **************************************************/
-void poly_basemul_montgomery(poly *r, const poly *a, const poly *b)
+__host__ __device__ void
+poly_basemul_montgomery(poly *r, const poly *a, const poly *b)
 {
+
+  // FIXME: CUDA does not allow global arrays.
+  const int16_t zetas[128] = {
+    -1044,  -758,  -359, -1517,  1493,  1422,   287,   202,
+    -171,   622,  1577,   182,   962, -1202, -1474,  1468,
+      573, -1325,   264,   383,  -829,  1458, -1602,  -130,
+    -681,  1017,   732,   608, -1542,   411,  -205, -1571,
+    1223,   652,  -552,  1015, -1293,  1491,  -282, -1544,
+      516,    -8,  -320,  -666, -1618, -1162,   126,  1469,
+    -853,   -90,  -271,   830,   107, -1421,  -247,  -951,
+    -398,   961, -1508,  -725,   448, -1065,   677, -1275,
+    -1103,   430,   555,   843, -1251,   871,  1550,   105,
+      422,   587,   177,  -235,  -291,  -460,  1574,  1653,
+    -246,   778,  1159,  -147,  -777,  1483,  -602,  1119,
+    -1590,   644,  -872,   349,   418,   329,  -156,   -75,
+      817,  1097,   603,   610,  1322, -1285, -1465,   384,
+    -1215,  -136,  1218, -1335,  -874,   220, -1187, -1659,
+    -1185, -1530, -1278,   794, -1510,  -854,  -870,   478,
+    -108,  -308,   996,   991,   958, -1460,  1522,  1628
+  };
+
   unsigned int i;
   for(i=0;i<KYBER_N/4;i++) {
     basemul(&r->coeffs[4*i], &a->coeffs[4*i], &b->coeffs[4*i], zetas[64+i]);
@@ -304,7 +329,8 @@ void poly_basemul_montgomery(poly *r, const poly *a, const poly *b)
 *
 * Arguments:   - poly *r: pointer to input/output polynomial
 **************************************************/
-void poly_tomont(poly *r)
+__host__ __device__ void
+poly_tomont(poly *r)
 {
   unsigned int i;
   const int16_t f = (1ULL << 32) % KYBER_Q;
@@ -320,7 +346,8 @@ void poly_tomont(poly *r)
 *
 * Arguments:   - poly *r: pointer to input/output polynomial
 **************************************************/
-void poly_reduce(poly *r)
+__host__ __device__ void
+poly_reduce(poly *r)
 {
   unsigned int i;
   for(i=0;i<KYBER_N;i++)
@@ -336,7 +363,8 @@ void poly_reduce(poly *r)
 *            - const poly *a: pointer to first input polynomial
 *            - const poly *b: pointer to second input polynomial
 **************************************************/
-void poly_add(poly *r, const poly *a, const poly *b)
+__host__ __device__ void
+poly_add(poly *r, const poly *a, const poly *b)
 {
   unsigned int i;
   for(i=0;i<KYBER_N;i++)

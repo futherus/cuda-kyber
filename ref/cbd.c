@@ -12,7 +12,8 @@
 *
 * Returns 32-bit unsigned integer loaded from x
 **************************************************/
-static uint32_t load32_littleendian(const uint8_t x[4])
+__host__ __device__ static uint32_t
+load32_littleendian(const uint8_t x[4])
 {
   uint32_t r;
   r  = (uint32_t)x[0];
@@ -34,7 +35,8 @@ static uint32_t load32_littleendian(const uint8_t x[4])
 * Returns 32-bit unsigned integer loaded from x (most significant byte is zero)
 **************************************************/
 #if KYBER_ETA1 == 3
-static uint32_t load24_littleendian(const uint8_t x[3])
+__host__ __device__ static uint32_t
+load24_littleendian(const uint8_t x[3])
 {
   uint32_t r;
   r  = (uint32_t)x[0];
@@ -55,7 +57,8 @@ static uint32_t load24_littleendian(const uint8_t x[3])
 * Arguments:   - poly *r: pointer to output polynomial
 *              - const uint8_t *buf: pointer to input byte array
 **************************************************/
-static void cbd2(poly *r, const uint8_t buf[2*KYBER_N/4])
+__host__ __device__ static void
+cbd2(poly *r, const uint8_t buf[2*KYBER_N/4])
 {
   unsigned int i,j;
   uint32_t t,d;
@@ -86,7 +89,8 @@ static void cbd2(poly *r, const uint8_t buf[2*KYBER_N/4])
 *              - const uint8_t *buf: pointer to input byte array
 **************************************************/
 #if KYBER_ETA1 == 3
-static void cbd3(poly *r, const uint8_t buf[3*KYBER_N/4])
+__host__ __device__ static void
+cbd3(poly *r, const uint8_t buf[3*KYBER_N/4])
 {
   unsigned int i,j;
   uint32_t t,d;
@@ -107,7 +111,8 @@ static void cbd3(poly *r, const uint8_t buf[3*KYBER_N/4])
 }
 #endif
 
-void poly_cbd_eta1(poly *r, const uint8_t buf[KYBER_ETA1*KYBER_N/4])
+__host__ __device__ void
+poly_cbd_eta1(poly *r, const uint8_t buf[KYBER_ETA1*KYBER_N/4])
 {
 #if KYBER_ETA1 == 2
   cbd2(r, buf);
