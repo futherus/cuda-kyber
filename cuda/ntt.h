@@ -10,12 +10,12 @@
 // extern const int16_t zetas[128];
 
 #define ntt KYBER_NAMESPACE(ntt)
-__host__ __device__ void ntt(int16_t poly[256]);
+__device__ void ntt(int16_t poly[256]);
 
 #define invntt KYBER_NAMESPACE(invntt)
-void invntt(int16_t poly[256]);
+__device__ void invntt(int16_t poly[256]);
 
 #define basemul KYBER_NAMESPACE(basemul)
-__host__ __device__ void basemul(int16_t r[2], const int16_t a[2], const int16_t b[2], int16_t zeta);
+__device__ void basemul(int16_t r[2], const int16_t a[2], const int16_t b[2], int16_t zeta);
 
 #endif

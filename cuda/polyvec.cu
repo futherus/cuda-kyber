@@ -133,13 +133,14 @@ void polyvec_decompress(polyvec *r, const uint8_t a[KYBER_POLYVECCOMPRESSEDBYTES
 * Description: Serialize vector of polynomials
 *
 * Arguments:   - uint8_t *r: pointer to output byte array
-*                            (needs space for KYBER_POLYVECBYTES)
+*                            (needs space for KYBER_POLYVECBYTES * blockSize * blockCount)
 *              - const polyvec *a: pointer to input vector of polynomials
 **************************************************/
-__host__ __device__ void
+__device__ void
 polyvec_tobytes(uint8_t r[KYBER_POLYVECBYTES], const polyvec *a)
 {
   unsigned int i;
+  #pragma unroll
   for(i=0;i<KYBER_K;i++)
     poly_tobytes(r+i*KYBER_POLYBYTES, &a->vec[i]);
 }
@@ -168,7 +169,7 @@ void polyvec_frombytes(polyvec *r, const uint8_t a[KYBER_POLYVECBYTES])
 *
 * Arguments:   - polyvec *r: pointer to in/output vector of polynomials
 **************************************************/
-__host__ __device__ void
+__device__ void
 polyvec_ntt(polyvec *r)
 {
   unsigned int i;
@@ -184,7 +185,8 @@ polyvec_ntt(polyvec *r)
 *
 * Arguments:   - polyvec *r: pointer to in/output vector of polynomials
 **************************************************/
-void polyvec_invntt_tomont(polyvec *r)
+__device__ void
+polyvec_invntt_tomont(polyvec *r)
 {
   unsigned int i;
   for(i=0;i<KYBER_K;i++)
@@ -201,7 +203,7 @@ void polyvec_invntt_tomont(polyvec *r)
 *            - const polyvec *a: pointer to first input vector of polynomials
 *            - const polyvec *b: pointer to second input vector of polynomials
 **************************************************/
-__host__ __device__ void
+__device__ void
 polyvec_basemul_acc_montgomery(poly *r, const polyvec *a, const polyvec *b)
 {
   unsigned int i;
@@ -225,7 +227,7 @@ polyvec_basemul_acc_montgomery(poly *r, const polyvec *a, const polyvec *b)
 *
 * Arguments:   - polyvec *r: pointer to input/output polynomial
 **************************************************/
-__host__ __device__ void
+__device__ void
 polyvec_reduce(polyvec *r)
 {
   unsigned int i;
@@ -242,7 +244,7 @@ polyvec_reduce(polyvec *r)
 *            - const polyvec *a: pointer to first input vector of polynomials
 *            - const polyvec *b: pointer to second input vector of polynomials
 **************************************************/
-__host__ __device__ void
+__device__ void
 polyvec_add(polyvec *r, const polyvec *a, const polyvec *b)
 {
   unsigned int i;

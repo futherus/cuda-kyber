@@ -16,20 +16,28 @@ static void print_key( const char* descr, uint8_t* key, int key_sz)
   printf("\n");
 }
 
+
+#define KEYPAIR_COUNT 32
+
 static int test_keys(void)
 {
-  uint8_t pk[CRYPTO_PUBLICKEYBYTES] = {0}; // 1184 bytes
-  uint8_t sk[CRYPTO_SECRETKEYBYTES] = {0}; // 2400 bytes
+
+
+  uint8_t pk[KEYPAIR_COUNT * CRYPTO_PUBLICKEYBYTES] = {0}; // 32 * 1184 bytes
+  uint8_t sk[KEYPAIR_COUNT * CRYPTO_SECRETKEYBYTES] = {0}; // 32 * 2400 bytes
   // uint8_t ct[CRYPTO_CIPHERTEXTBYTES]; // 1088 bytes
   // uint8_t key_a[CRYPTO_BYTES]; // 32 bytes
   // uint8_t key_b[CRYPTO_BYTES];
 
   //Alice generates a public key
-  crypto_kem_keypair(pk, sk);
+  crypto_kem_keypair(pk, sk, KEYPAIR_COUNT);
 
-  print_key( "Public key", pk, CRYPTO_PUBLICKEYBYTES);
-  print_key( "Secret key", sk, CRYPTO_SECRETKEYBYTES);
-
+  for (int i = 0; i < KEYPAIR_COUNT; i++)
+  {
+    printf("Keypair %d\n", i);
+    print_key( "Public key", pk + i * CRYPTO_PUBLICKEYBYTES, CRYPTO_PUBLICKEYBYTES);
+    print_key( "Secret key", sk + i * CRYPTO_SECRETKEYBYTES, CRYPTO_SECRETKEYBYTES);
+  }
   //Bob derives a secret key and creates a response
   //crypto_kem_enc(ct, key_b, pk);
 

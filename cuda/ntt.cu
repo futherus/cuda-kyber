@@ -46,7 +46,7 @@ void init_ntt() {
 *
 * Returns 16-bit integer congruent to a*b*R^{-1} mod q
 **************************************************/
-__host__ __device__ static int16_t
+__device__ static int16_t
 fqmul(int16_t a, int16_t b) {
   return montgomery_reduce((int32_t)a*b);
 }
@@ -59,7 +59,7 @@ fqmul(int16_t a, int16_t b) {
 *
 * Arguments:   - int16_t r[256]: pointer to input/output vector of elements of Zq
 **************************************************/
-__host__ __device__ void
+__device__ void
 ntt(int16_t r[256]) {
   // FIXME: CUDA does not allow global arrays.
   const int16_t zetas[128] = {
@@ -106,7 +106,7 @@ ntt(int16_t r[256]) {
 *
 * Arguments:   - int16_t r[256]: pointer to input/output vector of elements of Zq
 **************************************************/
-void invntt(int16_t r[256]) {
+__device__ void invntt(int16_t r[256]) {
   // FIXME: CUDA does not allow global arrays.
   const int16_t zetas[128] = {
     -1044,  -758,  -359, -1517,  1493,  1422,   287,   202,
@@ -159,7 +159,7 @@ void invntt(int16_t r[256]) {
 *              - const int16_t b[2]: pointer to the second factor
 *              - int16_t zeta: integer defining the reduction polynomial
 **************************************************/
-__host__ __device__ void
+__device__ void
 basemul(int16_t r[2], const int16_t a[2], const int16_t b[2], int16_t zeta)
 {
   r[0]  = fqmul(a[1], b[1]);

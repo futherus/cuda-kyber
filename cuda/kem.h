@@ -21,7 +21,7 @@
 __global__ void crypto_kem_keypair_derand(uint8_t *pk, uint8_t *sk, const uint8_t *coins);
 
 #define crypto_kem_keypair KYBER_NAMESPACE(keypair)
-int crypto_kem_keypair(uint8_t *pk, uint8_t *sk);
+int crypto_kem_keypair(uint8_t *pk, uint8_t *sk, uint32_t keypair_count);
 
 #define crypto_kem_enc_derand KYBER_NAMESPACE(enc_derand)
 int crypto_kem_enc_derand(uint8_t *ct, uint8_t *ss, const uint8_t *pk, const uint8_t *coins);

@@ -20,7 +20,7 @@
 *              polyvec *pk: pointer to the input public-key polyvec
 *              const uint8_t *seed: pointer to the input public seed
 **************************************************/
-__host__ __device__ static void
+__device__ static void
 pack_pk(uint8_t r[KYBER_INDCPA_PUBLICKEYBYTES],
         polyvec *pk,
         const uint8_t seed[KYBER_SYMBYTES])
@@ -55,7 +55,7 @@ static void unpack_pk(polyvec *pk,
 * Arguments:   - uint8_t *r: pointer to output serialized secret key
 *              - polyvec *sk: pointer to input vector of polynomials (secret key)
 **************************************************/
-__host__ __device__ static void
+__device__ static void
 pack_sk(uint8_t r[KYBER_INDCPA_SECRETKEYBYTES], polyvec *sk)
 {
   polyvec_tobytes(r, sk);
@@ -120,11 +120,11 @@ static void unpack_ciphertext(polyvec *b, poly *v, const uint8_t c[KYBER_INDCPA_
 *
 * Returns number of sampled 16-bit integers (at most len)
 **************************************************/
-__host__ __device__ static unsigned int
+__device__ static unsigned int
 rej_uniform(int16_t *r,
-                                unsigned int len,
-                                const uint8_t *buf,
-                                unsigned int buflen)
+            unsigned int len,
+            const uint8_t *buf,
+            unsigned int buflen)
 {
   unsigned int ctr, pos;
   uint16_t val0, val1;
@@ -165,7 +165,7 @@ rej_uniform(int16_t *r,
 
 #define GEN_MATRIX_NBLOCKS ((12*KYBER_N/8*(1 << 12)/KYBER_Q + XOF_BLOCKBYTES)/XOF_BLOCKBYTES)
 // Not static for benchmarking
-__host__ __device__ void
+__device__ void
 gen_matrix(polyvec *a, const uint8_t seed[KYBER_SYMBYTES], int transposed)
 {
   unsigned int ctr, i, j;
@@ -173,7 +173,9 @@ gen_matrix(polyvec *a, const uint8_t seed[KYBER_SYMBYTES], int transposed)
   uint8_t buf[GEN_MATRIX_NBLOCKS*XOF_BLOCKBYTES];
   xof_state state;
 
+  #pragma unroll
   for(i=0;i<KYBER_K;i++) {
+    #pragma unroll
     for(j=0;j<KYBER_K;j++) {
       if(transposed)
         xof_absorb(&state, seed, i, j);
@@ -184,6 +186,7 @@ gen_matrix(polyvec *a, const uint8_t seed[KYBER_SYMBYTES], int transposed)
       buflen = GEN_MATRIX_NBLOCKS*XOF_BLOCKBYTES;
       ctr = rej_uniform(a[i].vec[j].coeffs, KYBER_N, buf, buflen);
 
+      #pragma unroll
       while(ctr < KYBER_N) {
         xof_squeezeblocks(buf, 1, &state);
         buflen = XOF_BLOCKBYTES;
@@ -199,23 +202,24 @@ gen_matrix(polyvec *a, const uint8_t seed[KYBER_SYMBYTES], int transposed)
 * Description: Generates public and private key for the CPA-secure
 *              public-key encryption scheme underlying Kyber
 *
-* Arguments:   - uint8_t *pk: pointer to output public key
-*                             (of length KYBER_INDCPA_PUBLICKEYBYTES bytes)
+* Arguments:   - uint8_t *pk: pointer to output public keys
+*                             (of length KYBER_INDCPA_PUBLICKEYBYTES bytes per thread)
 *              - uint8_t *sk: pointer to output private key
-*                             (of length KYBER_INDCPA_SECRETKEYBYTES bytes)
+*                             (of length KYBER_INDCPA_SECRETKEYBYTES bytes per thread)
 *              - const uint8_t *coins: pointer to input randomness
-*                             (of length KYBER_SYMBYTES bytes)
+*                             (of length KYBER_SYMBYTES bytes per thread)
 **************************************************/
-__host__ __device__ void
-indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
-                      uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES],
-                      const uint8_t coins[KYBER_SYMBYTES])
+__device__ void
+indcpa_keypair_derand(uint8_t* pk,
+                      uint8_t* sk,
+                      const uint8_t* coins)
 {
   unsigned int i;
   uint8_t buf[2*KYBER_SYMBYTES];
   const uint8_t *publicseed = buf;
   const uint8_t *noiseseed = buf+KYBER_SYMBYTES;
   uint8_t nonce = 0;
+  // will local memory enough??
   polyvec a[KYBER_K], e, pkpv, skpv;
 
   memcpy(buf, coins, KYBER_SYMBYTES);
@@ -236,8 +240,11 @@ indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 
   gen_a(a, publicseed); // [A4: 4-8] Generate matrix A with elements from R (R ~= Z^n -- discrete vectors).
 
+  #pragma unroll
   for(i=0;i<KYBER_K;i++)
     poly_getnoise_eta1(&skpv.vec[i], noiseseed, nonce++); // [A4: 9-12] Sample short vector s.
+
+  #pragma unroll
   for(i=0;i<KYBER_K;i++)
     poly_getnoise_eta1(&e.vec[i], noiseseed, nonce++);    // [A4: 13-16] Sample error vector e.
 
@@ -245,6 +252,7 @@ indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec_ntt(&e);
 
   // matrix-vector multiplication
+  #pragma unroll
   for(i=0;i<KYBER_K;i++) {
     polyvec_basemul_acc_montgomery(&pkpv.vec[i], &a[i], &skpv);
     poly_tomont(&pkpv.vec[i]);
@@ -257,6 +265,7 @@ indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   pack_pk(pk, &pkpv, publicseed);
 }
 
+#if 0
 
 /*************************************************
 * Name:        indcpa_enc
@@ -347,3 +356,5 @@ void indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES],
 
   poly_tomsg(m, &mp);
 }
+
+#endif

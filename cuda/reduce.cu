@@ -13,7 +13,7 @@
 *
 * Returns:     integer in {-q+1,...,q-1} congruent to a * R^-1 modulo q.
 **************************************************/
-__host__ __device__ int16_t
+__device__ int16_t
 montgomery_reduce(int32_t a)
 {
   int16_t t;
@@ -33,7 +33,7 @@ montgomery_reduce(int32_t a)
 *
 * Returns:     integer in {-(q-1)/2,...,(q-1)/2} congruent to a modulo q.
 **************************************************/
-__host__ __device__ int16_t
+__device__ int16_t
 barrett_reduce(int16_t a) {
   int16_t t;
   const int16_t v = ((1<<26) + KYBER_Q/2)/KYBER_Q;

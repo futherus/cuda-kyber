@@ -20,7 +20,7 @@ void poly_compress(uint8_t r[KYBER_POLYCOMPRESSEDBYTES], const poly *a);
 void poly_decompress(poly *r, const uint8_t a[KYBER_POLYCOMPRESSEDBYTES]);
 
 #define poly_tobytes KYBER_NAMESPACE(poly_tobytes)
-__host__ __device__ void poly_tobytes(uint8_t r[KYBER_POLYBYTES], const poly *a);
+__device__ void poly_tobytes(uint8_t r[KYBER_POLYBYTES], const poly *a);
 #define poly_frombytes KYBER_NAMESPACE(poly_frombytes)
 void poly_frombytes(poly *r, const uint8_t a[KYBER_POLYBYTES]);
 
@@ -30,26 +30,26 @@ void poly_frommsg(poly *r, const uint8_t msg[KYBER_INDCPA_MSGBYTES]);
 void poly_tomsg(uint8_t msg[KYBER_INDCPA_MSGBYTES], const poly *r);
 
 #define poly_getnoise_eta1 KYBER_NAMESPACE(poly_getnoise_eta1)
-__host__ __device__ void poly_getnoise_eta1(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t nonce);
+__device__ void poly_getnoise_eta1(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t nonce);
 
 #define poly_getnoise_eta2 KYBER_NAMESPACE(poly_getnoise_eta2)
-void poly_getnoise_eta2(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t nonce);
+__device__ void poly_getnoise_eta2(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t nonce);
 
 #define poly_ntt KYBER_NAMESPACE(poly_ntt)
-__host__ __device__ void poly_ntt(poly *r);
+__device__ void poly_ntt(poly *r);
 #define poly_invntt_tomont KYBER_NAMESPACE(poly_invntt_tomont)
-void poly_invntt_tomont(poly *r);
+__device__ void poly_invntt_tomont(poly *r);
 #define poly_basemul_montgomery KYBER_NAMESPACE(poly_basemul_montgomery)
-__host__ __device__ void poly_basemul_montgomery(poly *r, const poly *a, const poly *b);
+__device__ void poly_basemul_montgomery(poly *r, const poly *a, const poly *b);
 #define poly_tomont KYBER_NAMESPACE(poly_tomont)
-__host__ __device__ void poly_tomont(poly *r);
+__device__ void poly_tomont(poly *r);
 
 #define poly_reduce KYBER_NAMESPACE(poly_reduce)
-__host__ __device__ void poly_reduce(poly *r);
+__device__ void poly_reduce(poly *r);
 
 #define poly_add KYBER_NAMESPACE(poly_add)
-__host__ __device__ void poly_add(poly *r, const poly *a, const poly *b);
+__device__ void poly_add(poly *r, const poly *a, const poly *b);
 #define poly_sub KYBER_NAMESPACE(poly_sub)
-void poly_sub(poly *r, const poly *a, const poly *b);
+__device__ void poly_sub(poly *r, const poly *a, const poly *b);
 
 #endif

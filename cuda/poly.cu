@@ -121,7 +121,7 @@ void poly_decompress(poly *r, const uint8_t a[KYBER_POLYCOMPRESSEDBYTES])
 *                            (needs space for KYBER_POLYBYTES bytes)
 *              - const poly *a: pointer to input polynomial
 **************************************************/
-__host__ __device__ void
+__device__ void
 poly_tobytes(uint8_t r[KYBER_POLYBYTES], const poly *a)
 {
   unsigned int i;
@@ -223,7 +223,7 @@ void poly_tomsg(uint8_t msg[KYBER_INDCPA_MSGBYTES], const poly *a)
 *                                     (of length KYBER_SYMBYTES bytes)
 *              - uint8_t nonce: one-byte input nonce
 **************************************************/
-__host__ __device__ void
+__device__ void
 poly_getnoise_eta1(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t nonce)
 {
   uint8_t buf[KYBER_ETA1*KYBER_N/4];
@@ -243,7 +243,9 @@ poly_getnoise_eta1(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t nonce)
 *                                     (of length KYBER_SYMBYTES bytes)
 *              - uint8_t nonce: one-byte input nonce
 **************************************************/
-void poly_getnoise_eta2(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t nonce)
+
+__device__ void
+poly_getnoise_eta2(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t nonce)
 {
   uint8_t buf[KYBER_ETA2*KYBER_N/4];
   prf(buf, sizeof(buf), seed, nonce);
@@ -260,7 +262,7 @@ void poly_getnoise_eta2(poly *r, const uint8_t seed[KYBER_SYMBYTES], uint8_t non
 *
 * Arguments:   - uint16_t *r: pointer to in/output polynomial
 **************************************************/
-__host__ __device__ void
+__device__ void
 poly_ntt(poly *r)
 {
   ntt(r->coeffs);
@@ -276,7 +278,7 @@ poly_ntt(poly *r)
 *
 * Arguments:   - uint16_t *a: pointer to in/output polynomial
 **************************************************/
-void poly_invntt_tomont(poly *r)
+__device__ void poly_invntt_tomont(poly *r)
 {
   invntt(r->coeffs);
 }
@@ -290,7 +292,7 @@ void poly_invntt_tomont(poly *r)
 *              - const poly *a: pointer to first input polynomial
 *              - const poly *b: pointer to second input polynomial
 **************************************************/
-__host__ __device__ void
+__device__ void
 poly_basemul_montgomery(poly *r, const poly *a, const poly *b)
 {
 
@@ -329,7 +331,7 @@ poly_basemul_montgomery(poly *r, const poly *a, const poly *b)
 *
 * Arguments:   - poly *r: pointer to input/output polynomial
 **************************************************/
-__host__ __device__ void
+__device__ void
 poly_tomont(poly *r)
 {
   unsigned int i;
@@ -346,7 +348,7 @@ poly_tomont(poly *r)
 *
 * Arguments:   - poly *r: pointer to input/output polynomial
 **************************************************/
-__host__ __device__ void
+__device__ void
 poly_reduce(poly *r)
 {
   unsigned int i;
@@ -363,7 +365,7 @@ poly_reduce(poly *r)
 *            - const poly *a: pointer to first input polynomial
 *            - const poly *b: pointer to second input polynomial
 **************************************************/
-__host__ __device__ void
+__device__ void
 poly_add(poly *r, const poly *a, const poly *b)
 {
   unsigned int i;
@@ -380,7 +382,8 @@ poly_add(poly *r, const poly *a, const poly *b)
 *            - const poly *a: pointer to first input polynomial
 *            - const poly *b: pointer to second input polynomial
 **************************************************/
-void poly_sub(poly *r, const poly *a, const poly *b)
+__device__ void
+poly_sub(poly *r, const poly *a, const poly *b)
 {
   unsigned int i;
   for(i=0;i<KYBER_N;i++)
