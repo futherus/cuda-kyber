@@ -15,8 +15,7 @@
 *              - uint8_t i: additional byte of input
 *              - uint8_t j: additional byte of input
 **************************************************/
-__host__ __device__ void
-kyber_shake128_absorb(keccak_state *state,
+void kyber_shake128_absorb(keccak_state *state,
                            const uint8_t seed[KYBER_SYMBYTES],
                            uint8_t x,
                            uint8_t y)
@@ -41,8 +40,7 @@ kyber_shake128_absorb(keccak_state *state,
 *              - const uint8_t *key: pointer to the key (of length KYBER_SYMBYTES)
 *              - uint8_t nonce: single-byte nonce (public PRF input)
 **************************************************/
-__host__ __device__ void
-kyber_shake256_prf(uint8_t *out, size_t outlen, const uint8_t key[KYBER_SYMBYTES], uint8_t nonce)
+void kyber_shake256_prf(uint8_t *out, size_t outlen, const uint8_t key[KYBER_SYMBYTES], uint8_t nonce)
 {
   uint8_t extkey[KYBER_SYMBYTES+1];
 

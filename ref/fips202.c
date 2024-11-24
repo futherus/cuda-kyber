@@ -19,8 +19,7 @@
 *
 * Returns the loaded 64-bit unsigned integer
 **************************************************/
-__host__ __device__ static uint64_t
-load64(const uint8_t x[8]) {
+static uint64_t load64(const uint8_t x[8]) {
   unsigned int i;
   uint64_t r = 0;
 
@@ -38,14 +37,40 @@ load64(const uint8_t x[8]) {
 * Arguments:   - uint8_t *x: pointer to the output byte array (allocated)
 *              - uint64_t u: input 64-bit unsigned integer
 **************************************************/
-__host__ __device__ static void
-store64(uint8_t x[8], uint64_t u) {
+static void store64(uint8_t x[8], uint64_t u) {
   unsigned int i;
 
   for(i=0;i<8;i++)
     x[i] = u >> 8*i;
 }
 
+/* Keccak round constants */
+static const uint64_t KeccakF_RoundConstants[NROUNDS] = {
+  (uint64_t)0x0000000000000001ULL,
+  (uint64_t)0x0000000000008082ULL,
+  (uint64_t)0x800000000000808aULL,
+  (uint64_t)0x8000000080008000ULL,
+  (uint64_t)0x000000000000808bULL,
+  (uint64_t)0x0000000080000001ULL,
+  (uint64_t)0x8000000080008081ULL,
+  (uint64_t)0x8000000000008009ULL,
+  (uint64_t)0x000000000000008aULL,
+  (uint64_t)0x0000000000000088ULL,
+  (uint64_t)0x0000000080008009ULL,
+  (uint64_t)0x000000008000000aULL,
+  (uint64_t)0x000000008000808bULL,
+  (uint64_t)0x800000000000008bULL,
+  (uint64_t)0x8000000000008089ULL,
+  (uint64_t)0x8000000000008003ULL,
+  (uint64_t)0x8000000000008002ULL,
+  (uint64_t)0x8000000000000080ULL,
+  (uint64_t)0x000000000000800aULL,
+  (uint64_t)0x800000008000000aULL,
+  (uint64_t)0x8000000080008081ULL,
+  (uint64_t)0x8000000000008080ULL,
+  (uint64_t)0x0000000080000001ULL,
+  (uint64_t)0x8000000080008008ULL
+};
 
 /*************************************************
 * Name:        KeccakF1600_StatePermute
@@ -54,38 +79,8 @@ store64(uint8_t x[8], uint64_t u) {
 *
 * Arguments:   - uint64_t *state: pointer to input/output Keccak state
 **************************************************/
-__host__ __device__ static void
-KeccakF1600_StatePermute(uint64_t state[25])
+static void KeccakF1600_StatePermute(uint64_t state[25])
 {
-        // FIXME: CUDA does not allow global arrays.
-        /* Keccak round constants */
-        const uint64_t KeccakF_RoundConstants[NROUNDS] = {
-          (uint64_t)0x0000000000000001ULL,
-          (uint64_t)0x0000000000008082ULL,
-          (uint64_t)0x800000000000808aULL,
-          (uint64_t)0x8000000080008000ULL,
-          (uint64_t)0x000000000000808bULL,
-          (uint64_t)0x0000000080000001ULL,
-          (uint64_t)0x8000000080008081ULL,
-          (uint64_t)0x8000000000008009ULL,
-          (uint64_t)0x000000000000008aULL,
-          (uint64_t)0x0000000000000088ULL,
-          (uint64_t)0x0000000080008009ULL,
-          (uint64_t)0x000000008000000aULL,
-          (uint64_t)0x000000008000808bULL,
-          (uint64_t)0x800000000000008bULL,
-          (uint64_t)0x8000000000008089ULL,
-          (uint64_t)0x8000000000008003ULL,
-          (uint64_t)0x8000000000008002ULL,
-          (uint64_t)0x8000000000000080ULL,
-          (uint64_t)0x000000000000800aULL,
-          (uint64_t)0x800000008000000aULL,
-          (uint64_t)0x8000000080008081ULL,
-          (uint64_t)0x8000000000008080ULL,
-          (uint64_t)0x0000000080000001ULL,
-          (uint64_t)0x8000000080008008ULL
-        };
-
         int round;
 
         uint64_t Aba, Abe, Abi, Abo, Abu;
@@ -428,12 +423,11 @@ static void keccak_finalize(uint64_t s[25], unsigned int pos, unsigned int r, ui
 *
 * Returns new position pos in current block
 **************************************************/
-__host__ __device__ static unsigned int
-keccak_squeeze(uint8_t *out,
-               size_t outlen,
-               uint64_t s[25],
-               unsigned int pos,
-               unsigned int r)
+static unsigned int keccak_squeeze(uint8_t *out,
+                                   size_t outlen,
+                                   uint64_t s[25],
+                                   unsigned int pos,
+                                   unsigned int r)
 {
   unsigned int i;
 
@@ -464,12 +458,11 @@ keccak_squeeze(uint8_t *out,
 *              - size_t inlen: length of input in bytes
 *              - uint8_t p: domain-separation byte for different Keccak-derived functions
 **************************************************/
-__host__ __device__ static void
-keccak_absorb_once(uint64_t s[25],
-                   unsigned int r,
-                   const uint8_t *in,
-                   size_t inlen,
-                   uint8_t p)
+static void keccak_absorb_once(uint64_t s[25],
+                               unsigned int r,
+                               const uint8_t *in,
+                               size_t inlen,
+                               uint8_t p)
 {
   unsigned int i;
 
@@ -504,11 +497,10 @@ keccak_absorb_once(uint64_t s[25],
 *              - uint64_t *s: pointer to input/output Keccak state
 *              - unsigned int r: rate in bytes (e.g., 168 for SHAKE128)
 **************************************************/
-__host__ __device__ static void
-keccak_squeezeblocks(uint8_t *out,
-                     size_t nblocks,
-                     uint64_t s[25],
-                     unsigned int r)
+static void keccak_squeezeblocks(uint8_t *out,
+                                 size_t nblocks,
+                                 uint64_t s[25],
+                                 unsigned int r)
 {
   unsigned int i;
 
@@ -585,8 +577,7 @@ void shake128_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 *              - const uint8_t *in: pointer to input to be absorbed into s
 *              - size_t inlen: length of input in bytes
 **************************************************/
-__host__ __device__ void
-shake128_absorb_once(keccak_state *state, const uint8_t *in, size_t inlen)
+void shake128_absorb_once(keccak_state *state, const uint8_t *in, size_t inlen)
 {
   keccak_absorb_once(state->s, SHAKE128_RATE, in, inlen, 0x1F);
   state->pos = SHAKE128_RATE;
@@ -604,8 +595,7 @@ shake128_absorb_once(keccak_state *state, const uint8_t *in, size_t inlen)
 *              - size_t nblocks: number of blocks to be squeezed (written to output)
 *              - keccak_state *s: pointer to input/output Keccak state
 **************************************************/
-__host__ __device__ void
-shake128_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
+void shake128_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
 {
   keccak_squeezeblocks(out, nblocks, state->s, SHAKE128_RATE);
 }
@@ -660,8 +650,7 @@ void shake256_finalize(keccak_state *state)
 *              - size_t outlen : number of bytes to be squeezed (written to output)
 *              - keccak_state *s: pointer to input/output Keccak state
 **************************************************/
-__host__ __device__ void
-shake256_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
+void shake256_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 {
   state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE256_RATE);
 }
@@ -675,8 +664,7 @@ shake256_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 *              - const uint8_t *in: pointer to input to be absorbed into s
 *              - size_t inlen: length of input in bytes
 **************************************************/
-__host__ __device__ void
-shake256_absorb_once(keccak_state *state, const uint8_t *in, size_t inlen)
+void shake256_absorb_once(keccak_state *state, const uint8_t *in, size_t inlen)
 {
   keccak_absorb_once(state->s, SHAKE256_RATE, in, inlen, 0x1F);
   state->pos = SHAKE256_RATE;
@@ -694,8 +682,7 @@ shake256_absorb_once(keccak_state *state, const uint8_t *in, size_t inlen)
 *              - size_t nblocks: number of blocks to be squeezed (written to output)
 *              - keccak_state *s: pointer to input/output Keccak state
 **************************************************/
-__host__ __device__ void
-shake256_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
+void shake256_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
 {
   keccak_squeezeblocks(out, nblocks, state->s, SHAKE256_RATE);
 }
@@ -733,8 +720,7 @@ void shake128(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 *              - const uint8_t *in: pointer to input
 *              - size_t inlen: length of input in bytes
 **************************************************/
-__host__ __device__ void
-shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
+void shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 {
   size_t nblocks;
   keccak_state state;
@@ -756,8 +742,7 @@ shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 *              - const uint8_t *in: pointer to input
 *              - size_t inlen: length of input in bytes
 **************************************************/
-__host__ __device__ void
-sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
+void sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
 {
   unsigned int i;
   uint64_t s[25];
@@ -777,8 +762,7 @@ sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
 *              - const uint8_t *in: pointer to input
 *              - size_t inlen: length of input in bytes
 **************************************************/
-__host__ __device__ void
-sha3_512(uint8_t h[64], const uint8_t *in, size_t inlen)
+void sha3_512(uint8_t h[64], const uint8_t *in, size_t inlen)
 {
   unsigned int i;
   uint64_t s[25];
